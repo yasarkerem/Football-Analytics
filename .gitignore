@@ -1,0 +1,11 @@
+data/raw/
+data/processed/
+data/results/
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+.env
+*.pkl
+*.parquet
+reports/*.png
