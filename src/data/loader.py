@@ -1,5 +1,9 @@
 """
-Loads raw Wyscout JSON files from the data/raw directory.
+Loads raw Wyscout JSON files.
+
+Data root is resolved in this order:
+  1. WYSCOUT_RAW_DIR  environment variable  (e.g. Colab Drive mount)
+  2. Local  data/raw/  folder next to the repo root
 """
 import json
 import os
@@ -9,7 +13,8 @@ from tqdm import tqdm
 
 from src.utils.constants import COMPETITION_FILES, MATCH_FILES
 
-RAW_DIR = Path(__file__).resolve().parents[2] / "data" / "raw"
+_env = os.environ.get("WYSCOUT_RAW_DIR")
+RAW_DIR = Path(_env) if _env else Path(__file__).resolve().parents[2] / "data" / "raw"
 
 
 def _load_json(path: Path) -> list:
