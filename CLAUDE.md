@@ -33,18 +33,24 @@ data/raw/
 src/
   utils/constants.py      — all magic numbers (event IDs, tag IDs, zone boundaries)
   data/
-    loader.py             — load_events(), load_matches(), load_players(), load_teams()
+    loader.py             — load_events(), load_matches(), load_players(), load_teams(),
+                            load_playerank()
     preprocessor.py       — preprocess() → clean + tag flags + zones + outcome labels
+                            filter_passes(df, accurate_only) → pass subset
   features/
     event_features.py     — extract_event_features() → 20 tactical features per (matchId, teamId)
     aggregator.py         — aggregate_team_profiles() → season-level team vectors + outcomes
+                            build_fingerprint_matrix() → (X, y) split for clustering
   network/
     builder.py            — build_all_networks() → dict[(matchId,teamId)] = nx.DiGraph
     metrics.py            — compute_network_metrics() → density, clustering, centralization, etc.
   clustering/
-    fingerprints.py       — build_fingerprint_report() → scale→PCA→UMAP→AgglomerativeClustering
+    fingerprints.py       — scale_features(), run_pca(), find_optimal_clusters()
+                            build_fingerprint_report() → scale→PCA→UMAP→AgglomerativeClustering
   visualization/
-    plots.py              — scatter, radar, outcome boxplot, PCA variance, silhouette
+    plots.py              — plot_cluster_scatter(), plot_fingerprint_radar(),
+                            plot_outcome_by_fingerprint(), plot_pca_variance(),
+                            plot_silhouette_curve()
   pipeline.py             — end-to-end CLI runner
 ```
 
@@ -64,25 +70,82 @@ python -m src.pipeline --competitions England Spain Germany --clusters 5
 python -m src.pipeline --no-umap
 ```
 
-## Notebook
-`notebooks/01_tactical_fingerprints.ipynb` — interactive step-by-step walkthrough.
-Set `COMPETITIONS` list at the top to control which leagues to load.
+## Notebooks
+
+| Notebook | Purpose |
+|---|---|
+| `notebooks/01_tactical_fingerprints.ipynb` | Original step-by-step walkthrough |
+| `notebooks/03_full_analysis.ipynb` | **Primary notebook — full end-to-end analysis, Run All** |
+
+### `03_full_analysis.ipynb` (Google Colab)
+Designed for Google Colab with Drive-backed data. Covers all pipeline stages in a single notebook:
+
+1. **Setup** — Drive mount, repo clone/pull, `pip install`
+2. **Load** — `load_events()`, `load_matches()`, `load_teams()`, `load_players()`, `load_playerank()`
+3. **EDA** — event type distribution, spatial heatmaps per competition, match outcome pie, player role bar chart, pass accuracy by competition
+4. **Preprocess** — `preprocess()` + `filter_passes()`
+5. **Event Features** — `extract_event_features()` + correlation heatmap
+6. **Passing Networks** — `build_all_networks()` + `compute_network_metrics()` + sample network viz + metric distributions
+7. **Team Profiles** — `aggregate_team_profiles()` + top-3 teams per competition + feature vs win-rate scatter grid
+8. **PCA** — variance curve + top feature loadings per PC
+9. **Optimal k** — silhouette curve via `find_optimal_clusters()`
+10. **Fingerprints** — `build_fingerprint_report()` (UMAP scatter + radar + outcome boxplots + feature heatmap)
+11. **Cross-competition** — fingerprint distribution stacked bar + tactical style comparison
+12. **Save** — all artefacts written to `DRIVE_OUT` (`fingerprints.csv/.parquet`, `pipeline_artifacts.pkl`, all PNGs)
+
+**Key config variables at top of notebook:**
+```python
+DRIVE_DATA   = '/content/drive/MyDrive/Football_Events_SDS/Data'
+DRIVE_OUT    = '/content/drive/MyDrive/Football_Events_SDS/Results'
+COMPETITIONS = ['England','Spain','Italy','France','Germany',
+                'European_Championship','World_Cup']
+N_CLUSTERS   = 5
+```
 
 ## Output Files
+
+### CLI pipeline (`data/`, `reports/`)
 ```
 data/processed/
-  events_clean.parquet    — preprocessed events
-  event_features.parquet  — per (matchId, teamId) tactical features
-  network_metrics.parquet — per (matchId, teamId) graph metrics
+  events_clean.parquet       — preprocessed events
+  event_features.parquet     — per (matchId, teamId) tactical features
+  network_metrics.parquet    — per (matchId, teamId) graph metrics
 data/results/
-  team_profiles.parquet   — aggregated team-season vectors
-  fingerprints.parquet    — team profiles with cluster assignments
-  fingerprints.csv        — same, human-readable
-  pipeline_artifacts.pkl  — scaler + PCA objects
+  team_profiles.parquet      — aggregated team-season vectors
+  fingerprints.parquet       — team profiles with cluster assignments
+  fingerprints.csv           — same, human-readable
+  pipeline_artifacts.pkl     — scaler + PCA objects
 reports/
   fingerprint_scatter.png, fingerprint_radar.png,
   win_rate_by_fp.png, ppm_by_fp.png,
   pca_variance.png, cluster_quality.png
+```
+
+### Notebook outputs — committed to `Results/`
+```
+Results/
+  fingerprints.csv                  — labelled team profiles (human-readable)
+  fingerprint_summary.csv           — per-cluster mean stats
+  eda_event_distribution.png        — event type + events per competition
+  eda_spatial_heatmap.png           — pitch density heatmap per competition
+  eda_match_outcomes.png            — goals distribution + result pie
+  eda_player_roles.png              — players by position
+  eda_pass_accuracy.png             — pass accuracy by competition
+  feature_correlation.png           — 20-feature correlation heatmap
+  sample_passing_network.png        — sample team pass graph
+  network_metric_distributions.png  — 6-panel network metric histograms
+  feature_vs_win_rate.png           — 8 key features vs win rate scatter
+  pca_variance.png                  — cumulative explained variance
+  pca_loadings.png                  — top feature loadings for PC1–3
+  cluster_quality.png               — silhouette curve
+  fingerprint_scatter.png           — UMAP scatter coloured by fingerprint
+  fingerprint_radar.png             — radar chart per cluster
+  win_rate_y_by_fp.png              — win rate boxplot by fingerprint
+  points_per_match_y_by_fp.png      — points per match boxplot by fingerprint
+  goalDiff_y_by_fp.png              — goal difference boxplot by fingerprint
+  fingerprint_feature_heatmap.png   — normalised feature means per cluster
+  fingerprint_by_competition.png    — stacked bar of FP distribution per league
+  style_by_competition.png          — tactical style bar chart per league
 ```
 
 ## Feature Groups (20 event + 10 network = 30 total)
