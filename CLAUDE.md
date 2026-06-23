@@ -121,29 +121,31 @@ reports/
   pca_variance.png, cluster_quality.png
 ```
 
-### Notebook (`DRIVE_OUT` on Google Drive)
+### Notebook outputs — committed to `Results/`
 ```
-fingerprints.csv / .parquet       — labelled team profiles
-fingerprint_summary.csv           — per-cluster mean stats
-pipeline_artifacts.pkl            — scaler + PCA objects
-eda_event_distribution.png        — event type + events per competition
-eda_spatial_heatmap.png           — pitch density heatmap per competition
-eda_match_outcomes.png            — goals distribution + result pie
-eda_player_roles.png              — players by position
-eda_pass_accuracy.png             — pass accuracy by competition
-feature_correlation.png           — 20-feature correlation heatmap
-sample_passing_network.png        — sample team pass graph
-network_metric_distributions.png  — 6-panel network metric histograms
-feature_vs_win_rate.png           — 8 key features vs win rate scatter
-pca_variance.png                  — cumulative explained variance
-pca_loadings.png                  — top feature loadings for PC1–3
-cluster_quality.png               — silhouette curve
-fingerprint_scatter.png           — UMAP scatter coloured by fingerprint
-fingerprint_radar.png             — radar chart per cluster
-win_rate_by_fp.png / points_per_match_by_fp.png / goalDiff_by_fp.png
-fingerprint_feature_heatmap.png   — normalised feature means per cluster
-fingerprint_by_competition.png    — stacked bar of FP distribution per league
-style_by_competition.png          — tactical style bar chart per league
+Results/
+  fingerprints.csv                  — labelled team profiles (human-readable)
+  fingerprint_summary.csv           — per-cluster mean stats
+  eda_event_distribution.png        — event type + events per competition
+  eda_spatial_heatmap.png           — pitch density heatmap per competition
+  eda_match_outcomes.png            — goals distribution + result pie
+  eda_player_roles.png              — players by position
+  eda_pass_accuracy.png             — pass accuracy by competition
+  feature_correlation.png           — 20-feature correlation heatmap
+  sample_passing_network.png        — sample team pass graph
+  network_metric_distributions.png  — 6-panel network metric histograms
+  feature_vs_win_rate.png           — 8 key features vs win rate scatter
+  pca_variance.png                  — cumulative explained variance
+  pca_loadings.png                  — top feature loadings for PC1–3
+  cluster_quality.png               — silhouette curve
+  fingerprint_scatter.png           — UMAP scatter coloured by fingerprint
+  fingerprint_radar.png             — radar chart per cluster
+  win_rate_y_by_fp.png              — win rate boxplot by fingerprint
+  points_per_match_y_by_fp.png      — points per match boxplot by fingerprint
+  goalDiff_y_by_fp.png              — goal difference boxplot by fingerprint
+  fingerprint_feature_heatmap.png   — normalised feature means per cluster
+  fingerprint_by_competition.png    — stacked bar of FP distribution per league
+  style_by_competition.png          — tactical style bar chart per league
 ```
 
 ## Feature Groups (20 event + 10 network = 30 total)
