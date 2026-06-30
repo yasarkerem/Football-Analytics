@@ -129,16 +129,17 @@ FP4 Structured Attack   & 30 & 0.467          & 1.626          & $+0.304$       
 The largest cluster captures typical mid-table sides with average pass accuracy (0.828), moderate network density (0.610), and balanced zone distribution. Win rate (0.347) and goal difference ($-0.141$) confirm near-average performance.
 
 \subsubsection{FP1 -- Elite Possession ($n = 12$).}
-The most distinctive cluster captures elite possession-based teams: highest pass accuracy (0.882), highest network density (0.681), lowest long-ball ratio (0.011), and best performance on all outcome metrics. The low centralisation (0.491) reflects distributed passing --- a hallmark of fluid possession football.
+The smallest and most distinctive cluster captures elite possession-based teams: the highest pass accuracy (0.882), the highest network density (0.681), the lowest long-ball ratio (0.011), and the best performance on all three outcome metrics (win rate 0.582, 1.930 points per match, $+0.955$ goal difference). The low centralization score (0.491) reflects that passing is distributed across many players rather than routed through a single hub --- a hallmark of fluid possession football. Teams such as Real Madrid, Barcelona, and Bayern Munich are expected members of this cluster.
 
 \subsubsection{FP2 -- Direct Long Ball ($n = 8$).}
-Defined by the highest long-ball ratio (0.054) and cross ratio (0.046) alongside the lowest pass accuracy (0.776). Highest centralisation (0.582) suggests routing through a target forward. Poor performance (win rate 0.278, $-0.385$ GD) is consistent with the limitations of direct-play styles at the top level.
+This small cluster is defined by the highest long-ball ratio (0.054) and cross ratio (0.046) and the lowest pass accuracy (0.776), indicating teams that play direct, often aerial football. The highest centralization score (0.582) suggests routing through a target forward or wide player. Performance is poor (win rate 0.278, $-0.385$ goal difference), consistent with research showing that direct-play styles are less effective at the top level. The cluster primarily draws from tournament teams, which partly accounts for its small size.
 
 \subsubsection{FP3 -- Defensive Direct ($n = 49$).}
-Direct, low-accuracy football (pass accuracy 0.788, long-ball ratio 0.043) with the worst goal difference of all clusters ($-0.467$). Primarily lower-table domestic sides and weaker tournament teams.
+The second-largest cluster groups teams that play direct, low-accuracy football (0.788) with a high long-ball ratio (0.043) but achieve less attacking output than FP2 (lower cross ratio 0.044). The worst goal difference of all five clusters ($-0.467$) and a win rate of 0.279 characterise these as tactically limited sides, typically lower-league finishers and weaker tournament participants.
+
 
 \subsubsection{FP4 -- Structured Attack ($n = 30$).}
-Organised, competent sides achieving above-average outcomes (win rate 0.467, $+0.304$ GD). Pass accuracy (0.854) and network density (0.655) are second only to FP1, with a low long-ball ratio (0.020) pointing to patient build-up play.
+This mid-to-upper cluster describes organised, competent sides that do not reach the passing fluency of Elite Possession teams but achieve above-average outcomes (win rate 0.467, 1.626 points per match, $+0.304$ goal difference). Pass accuracy (0.854) and network density (0.655) are second only to FP1. The relatively low long-ball ratio (0.020) and cross ratio (0.033) point to patient build-up play balanced with direct attacking.
 
 \subsection{Statistical Validation}
 
@@ -160,8 +161,21 @@ Goal difference  & 42.66 & $1.22 \times 10^{-8}$ & *** \\
 
 \subsection{Cross-Competition Analysis}
 
-FP1 is almost exclusively composed of domestic league champions and top-two finishers — clubs that qualified for the Champions League — confirming the archetype correctly identifies elite play. Tournament teams (Euro 2016 and World Cup 2018) are disproportionately represented in FP2 and FP3, likely reflecting smaller match samples for those teams. Within domestic leagues, pass accuracy ranges from approximately 0.81 in Ligue 1 to 0.85 in La Liga; long-ball ratio is highest in the Bundesliga and among English sides.
+Fingerprint membership is not uniformly distributed across competitions. The Elite Possession cluster (FP1) is almost exclusively composed of domestic league champions and second-place finishers in the five top leagues --- clubs that qualified for the Champions League in subsequent seasons --- confirming that the archetype correctly identifies elite-level play. Tournament teams (Euro 2016 and World Cup 2018) are disproportionately represented in FP2 and FP3, likely reflecting the smaller match samples available for these teams (Section~7.1).
 
+Within domestic leagues, tactical style varies systematically across competitions. Pass accuracy ranges from approximately 0.81 in Ligue 1 to 0.85 in La Liga. Smart-pass ratio and attacking-third passing proportion are highest in the Premier League and La Liga, consistent with these leagues' reputations for high-tempo, technical football. Long-ball ratio is highest in the Bundesliga and among English sides, reflecting those leagues' physical playing traditions.
+
+\subsection{Fingerprint Lookup and Client Delivery}
+
+The five Tactical Fingerprints are operationalised into three concrete deliverables for the football analytics department.
+
+\begin{enumerate}
+    \item \textbf{Archetype card.} Each fingerprint is summarised in a one-page radar chart showing its normalised values across the eight most discriminative features (pass accuracy, long-ball ratio, cross ratio, smart-pass ratio, network density, centralisation, attacking-third pass proportion, counter-attack rate), together with its win rate, points per match, and goal difference. The card is designed to be printed and shared in a pre-match briefing without requiring any statistical knowledge from the coaching staff.
+
+    \item \textbf{Team lookup.} Any team in the dataset is assigned its fingerprint label and ranked within that fingerprint on each feature. A club's analyst can query ``where does Opponent X sit within FP2, and which of their features are most extreme?'' in a single table view, enabling fast opponent scouting preparation.
+
+    \item \textbf{Gap analysis for recruitment.} A club wishing to shift from FP3 (Defensive Direct) toward FP4 (Structured Attack) can generate a gap table showing the mean feature difference between the two fingerprints on each of the 30 dimensions. Recruitment candidates are then filtered by those gap features --- prioritising pass accuracy, network density, and attacking-third passing --- rather than by traditional metrics alone. This transforms the fingerprint taxonomy from a descriptive tool into a practical recruitment filter.
+\end{enumerate}
 \section{Discussion}
 
 \subsection{Limitations}
@@ -170,9 +184,13 @@ The dataset covers only two seasons; whether the five archetypes persist across 
 
 The silhouette coefficient favours $k = 2$ over $k = 5$. As argued in Section~5.2, $k = 5$ is selected on domain and analytical grounds, but the modest silhouette values confirm that playing style is a continuum and any discrete partitioning involves interpretation.
 
-\subsection{Practical Applications}
+\subsection{Practical Implications}
 
-The fingerprint framework supports three practitioner use cases. \textbf{Opponent scouting}: knowing an upcoming opponent belongs to FP2 (high centralisation, direct play) suggests deploying a compact shape targeting the key distribution hub. \textbf{Self-assessment}: a club in FP3 can identify the feature gaps separating it from FP4 and target specific improvements in pass accuracy and network density. \textbf{Recruitment}: a club shifting from FP3 toward FP4 can filter transfer candidates by the features most diagnostic of that transition rather than by traditional metrics alone.
+The Tactical Fingerprint framework has three practical applications for football practitioners. First, it provides a data-driven taxonomy of playing styles that coaches can use to contextualise their own team and benchmark against peers. A newly promoted side finding itself in FP3 (Defensive Direct) can identify the feature gaps separating it from FP4 (Structured Attack) and target specific improvements --- for instance, increasing passing accuracy in the midfield third or reducing centralisation to develop more distributed build-up play.
+
+Second, the fingerprints support recruitment targeting. A club seeking to shift from FP3 to FP4 can filter transfer candidates by the feature profiles most diagnostic of that transition (pass accuracy, network density, attacking third pass proportion) rather than searching only on traditional metrics.
+
+Third, the framework enables opponent scouting: knowing that an upcoming opponent belongs to FP2 (Direct Long Ball) with high centralisation suggests deploying a compact defensive shape targeting the key distribution hub rather than defending wide channels.
 
 \section{Conclusion}
 
