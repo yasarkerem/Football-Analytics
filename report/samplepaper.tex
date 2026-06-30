@@ -22,7 +22,7 @@
 \maketitle
 %
 \begin{abstract}
-We present an unsupervised analytics pipeline that discovers latent tactical identities --- Tactical Fingerprints --- from football event data and player passing networks. Applying the pipeline to the Wyscout public corpus (3.25 million events, 1,941 matches, 154 teams, seven competitions), we extract 30 features per team-season combining 21 event-derived style metrics and 9 graph-theoretic passing-network properties. Dimensionality reduction via PCA followed by agglomerative hierarchical clustering with Ward linkage produces five statistically distinct archetypes: Elite Possession, Balanced Mid-Table, Structured Attack, Defensive Direct, and Direct Long Ball. Kruskal--Wallis tests confirm that the fingerprints are strongly associated with match outcomes (win rate: $H = 36.2$, $p = 2.6 \times 10^{-7}$; points per match: $H = 37.7$, $p = 1.3 \times 10^{-7}$; goal difference: $H = 42.7$, $p = 1.2 \times 10^{-8}$). The pipeline is fully reproducible via a Google Colab notebook and a CLI runner backed by a modular Python package.
+We present an unsupervised analytics pipeline that discovers latent tactical identities --- Tactical Fingerprints --- from football event data and player passing networks. Applying the pipeline to the Wyscout public corpus (3.25 million events, 1,941 matches, 154 teams, seven competitions), we extract 31 features per team-season combining 21 event-derived style metrics and 10 graph-theoretic passing-network properties. Dimensionality reduction via PCA followed by agglomerative hierarchical clustering with Ward linkage produces five statistically distinct archetypes: Elite Possession, Balanced Mid-Table, Structured Attack, Defensive Direct, and Direct Long Ball. Kruskal--Wallis tests confirm that the fingerprints are strongly associated with match outcomes (win rate: $H = 36.2$, $p = 2.6 \times 10^{-7}$; points per match: $H = 37.7$, $p = 1.3 \times 10^{-7}$; goal difference: $H = 42.7$, $p = 1.2 \times 10^{-8}$). The pipeline is fully reproducible via a Google Colab notebook and a CLI runner backed by a modular Python package.
 
 \keywords{Football analytics \and Tactical analysis \and Passing networks \and Unsupervised clustering \and Sports data science}
 \end{abstract}
@@ -33,7 +33,10 @@ We present an unsupervised analytics pipeline that discovers latent tactical ide
 
 Modern football clubs generate millions of match events per season, yet most tactical conversations still rely on anecdote and the eye test. Summary statistics such as possession percentage or pass completion rate aggregate away the texture of play and cannot reliably answer whether an upcoming opponent favours direct transitions, rotational build-up, or high-press recovery.
 
-This paper presents Tactical Fingerprints, an end-to-end pipeline that answers those questions at scale. The pipeline is applied to the Wyscout public dataset covering five domestic leagues and two international tournaments (1,941 matches, 3.25 million events, 154 team-season profiles). From this corpus we derive 30 features per team — 21 event-derived style metrics and 9 passing-network topology metrics — and cluster the resulting profiles into five fingerprints using agglomerative hierarchical clustering. Kruskal–Wallis tests confirm that the five archetypes differ significantly on win rate, points per match, and goal difference.
+\paragraph*{Client context.}
+The primary audience is the performance-analysis staff of a professional club. Two decision problems motivate the work. First, \textit{squad positioning}: knowing which tactical archetype best describes our current squad allows coaches to benchmark against peers and identify the smallest feature gap to the next archetype up --- for example, a side classified as Defensive Direct (FP3) can quantify the pass-accuracy and network-density gap that separates it from Structured Attack (FP4), and use those gaps to filter transfer targets. Second, \textit{opponent preparation}: knowing that Saturday's opponent is a confirmed FP3 side with an above-average long-ball ratio and low pass accuracy prescribes a compact mid-block over an aggressive high press. Both use cases are addressed by the same Tactical Fingerprint taxonomy, delivered as printable archetype cards and a gap-analysis table (Section~\ref{sec:delivery}).
+
+This paper presents Tactical Fingerprints, an end-to-end pipeline that answers those questions at scale. The pipeline is applied to the Wyscout public dataset covering five domestic leagues and two international tournaments (1,941 matches, 3.25 million events, 154 team-season profiles). From this corpus we derive 31 features per team --- 21 event-derived style metrics and 10 passing-network topology metrics --- and cluster the resulting profiles into five fingerprints using agglomerative hierarchical clustering. Kruskal--Wallis tests confirm that the five archetypes differ significantly on win rate, points per match, and goal difference.
 
 The contributions of this work are: (i) a joint event-plus-network feature space validated against match outcomes; (ii) a five-archetype taxonomy of European professional football playing styles; and (iii) a reproducible pipeline any club analytics department can adapt to its own data.
 
@@ -55,15 +58,15 @@ Events are enriched with competition and outcome labels from the matches file (\
 
 \section{Feature Engineering}
 
-We construct 30 features per (\texttt{matchId}, \texttt{teamId}) observation, subsequently averaged to one season-level profile per team-competition entry.
+We construct 31 features per (\texttt{matchId}, \texttt{teamId}) observation, subsequently averaged to one season-level profile per team-competition entry.
 
 \subsection{Event Features (21)}
 
 \textbf{Volume} features count total events, passes, shots, and duels. \textbf{Efficiency} features quantify pass accuracy, shot accuracy, and duel win rate (tag 703) as ratios. \textbf{Spatial} features record mean and standard deviation of event positions in both dimensions. \textbf{Zone} features decompose passing volume into defensive, midfield, and attacking thirds. \textbf{Style} features capture proportions of crosses, simple passes, smart passes, lofted passes, long balls, counter-attacks, and dangerous attacks.
 
-\subsection{Passing Network Features (9)}
+\subsection{Passing Network Features (10)}
 
-For each (\texttt{matchId}, \texttt{teamId}) pair we build a directed weighted graph whose nodes are players and whose edges encode passing sequences. Because Wyscout does not record pass receivers directly, we use consecutive accurate pass events (sorted by \texttt{matchPeriod} and \texttt{eventSec}) as a proxy for passer--receiver relationships; only accurate passes (tag 1801) are included. From each graph we extract nine metrics: graph density, local clustering coefficient, weighted clustering coefficient, degree centralisation, top-player share of passing volume, average shortest path length, diameter, reciprocity, and node count.
+For each (\texttt{matchId}, \texttt{teamId}) pair we build a directed weighted graph whose nodes are players and whose edges encode passing sequences. Because Wyscout does not record pass receivers directly, we use consecutive accurate pass events (sorted by \texttt{matchPeriod} and \texttt{eventSec}) as a proxy for passer--receiver relationships; only accurate passes (tag 1801) are included. From each graph we extract ten metrics: graph density, local clustering coefficient, weighted clustering coefficient, degree centralisation, top-player share of passing volume (by betweenness centrality), average shortest path length, diameter, reciprocity, node count, and edge count.
 
 \subsection{Team-Season Profiles}
 
@@ -73,13 +76,27 @@ Per-match features are aggregated to season level by computing the mean across a
 
 \subsection{Dimensionality Reduction}
 
-Each 30-dimensional feature vector is standardised to zero mean and unit variance. PCA with 10 components is applied to the standardised matrix. For two-dimensional visualisation only, UMAP is applied to the same standardised matrix; UMAP plays no role in the clustering itself.
+Each 31-dimensional feature vector is standardised to zero mean and unit variance. PCA with 10 components is applied to the standardised matrix; the 10 components retain approximately 85\% of total variance (Fig.~\ref{fig:pca}). Increasing to 12--13 components reaches the conventional 90\% threshold, but was avoided because it approaches the ratio of features to observations ($n = 154$) and risks distorting cluster geometry; 85\% retention is sufficient to preserve the dominant tactical variation. For two-dimensional visualisation only, UMAP (\texttt{n\_neighbors}$= 15$, \texttt{min\_dist}$= 0.1$, Euclidean metric, \texttt{random\_state}$= 42$) is applied to the same standardised matrix; UMAP plays no role in the clustering itself.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.60\textwidth]{pca_variance.png}
+  \caption{Cumulative explained variance for PCA components 1--10. Ten components retain approximately 85\% of total variance; the dashed line marks the 90\% threshold.}
+  \label{fig:pca}
+\end{figure}
 
 \subsection{Clustering}
 
 Agglomerative hierarchical clustering with Ward linkage is applied to the PCA-10 representation. The number of clusters $k$ is selected by evaluating the silhouette coefficient and Davies--Bouldin index for $k = 2$ through $k = 8$.
 
-The silhouette coefficient peaks at $k = 2$ ($s = 0.284$) and declines monotonically; at $k = 5$ it yields $s = 0.165$. The Davies--Bouldin index shows a local improvement at $k = 5$, providing partial corroboration for a finer partition.
+The silhouette coefficient peaks at $k = 2$ ($s = 0.284$) and declines monotonically; at $k = 5$ it yields $s = 0.165$. The Davies--Bouldin index improves marginally at $k = 5$ relative to $k = 4$, but continues to decline through $k = 6$, so it does not unambiguously endorse $k = 5$. The Ward dendrogram (Fig.~\ref{fig:dendro}) shows the two largest linkage jumps at $k = 2$ (height $\approx 48$) and $k = 3$ (height $\approx 26$), consistent with the silhouette favouring a coarser partition; a cut at height $\approx 19.1$ yields five qualitatively distinct sub-trees.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.90\textwidth]{dendrogram.png}
+  \caption{Ward-linkage dendrogram of 154 team-season vectors. The dashed red line marks the $k = 5$ cut at height $\approx 19.1$, yielding five sub-trees that map to the Tactical Fingerprint archetypes.}
+  \label{fig:dendro}
+\end{figure}
 
 We select $k = 5$ for three domain-driven reasons. First, $k = 2$ produces only a coarse binary split; $k = 5$ recovers five qualitatively distinct profiles recognisable to coaches. Second, $k = 2$ yields clusters of 12 and 142 teams, which is analytically unbalanced; $k = 5$ yields clusters of 8--50 teams. Third, Kruskal--Wallis tests (Section~\ref{sec:validation}) confirm the five clusters differ significantly on all outcome measures. The modest absolute silhouette values reflect that football playing styles form a continuum rather than tight, well-separated clusters.
 
@@ -129,7 +146,7 @@ FP4 Structured Attack   & 30 & 0.467          & 1.626          & $+0.304$       
 The largest cluster captures typical mid-table sides with average pass accuracy (0.828), moderate network density (0.610), and balanced zone distribution. Win rate (0.347) and goal difference ($-0.141$) confirm near-average performance.
 
 \subsubsection{FP1 -- Elite Possession ($n = 12$).}
-The smallest and most distinctive cluster captures elite possession-based teams: the highest pass accuracy (0.882), the highest network density (0.681), the lowest long-ball ratio (0.011), and the best performance on all three outcome metrics (win rate 0.582, 1.930 points per match, $+0.955$ goal difference). The low centralization score (0.491) reflects that passing is distributed across many players rather than routed through a single hub --- a hallmark of fluid possession football. Teams such as Real Madrid, Barcelona, and Bayern Munich are expected members of this cluster.
+The smallest and most distinctive cluster captures elite possession-based teams: the highest pass accuracy (0.882), the highest network density (0.681), the lowest long-ball ratio (0.011), and the best performance on all three outcome metrics (win rate 0.582, 1.930 points per match, $+0.955$ goal difference). The low centralization score (0.491) reflects that passing is distributed across many players rather than routed through a single hub --- a hallmark of fluid possession football. Confirmed members include Real Madrid, Barcelona, Arsenal, Manchester City, Bayern M\"{u}nchen, Napoli, and PSG from the domestic leagues, together with the national squads of Spain (Euro 2016 and World Cup 2018), Germany (Euro 2016 and World Cup 2018), England (Euro 2016), Belgium (Euro 2016), and Brazil (World Cup 2018) --- all either league champions, Champions League qualifiers, or tournament contenders in 2017/18.
 
 \subsubsection{FP2 -- Direct Long Ball ($n = 8$).}
 This small cluster is defined by the highest long-ball ratio (0.054) and cross ratio (0.046) and the lowest pass accuracy (0.776), indicating teams that play direct, often aerial football. The highest centralization score (0.582) suggests routing through a target forward or wide player. Performance is poor (win rate 0.278, $-0.385$ goal difference), consistent with research showing that direct-play styles are less effective at the top level. The cluster primarily draws from tournament teams, which partly accounts for its small size.
@@ -165,17 +182,40 @@ Fingerprint membership is not uniformly distributed across competitions. The Eli
 
 Within domestic leagues, tactical style varies systematically across competitions. Pass accuracy ranges from approximately 0.81 in Ligue 1 to 0.85 in La Liga. Smart-pass ratio and attacking-third passing proportion are highest in the Premier League and La Liga, consistent with these leagues' reputations for high-tempo, technical football. Long-ball ratio is highest in the Bundesliga and among English sides, reflecting those leagues' physical playing traditions.
 
-\subsection{Fingerprint Lookup and Client Delivery}
+One notable anomaly merits discussion: France (World Cup 2018 winner) is classified as FP0 (Balanced Mid-Table) rather than FP1 (Elite Possession). This is consistent with the tournament record --- Didier Deschamps's side relied heavily on counter-attacking transitions and set-pieces rather than sustained positional possession, accumulating relatively modest pass-accuracy and network-density metrics across their seven matches. The result highlights a genuine limitation of the framework: a team can win a tournament through tactical pragmatism without exhibiting the stylistic signature of a possession-dominant archetype. It also illustrates that match-count imbalance (7 World Cup games vs.\ 38 domestic league games) amplifies variance for tournament teams and can cause their season-level profile to reflect a small, tactically specific sample rather than their true stylistic identity.
 
-The five Tactical Fingerprints are operationalised into three concrete deliverables for the football analytics department.
+\subsection{Fingerprint Lookup and Client Delivery}
+\label{sec:delivery}
+
+The five Tactical Fingerprints are operationalised into four concrete deliverables for the football analytics department.
 
 \begin{enumerate}
-    \item \textbf{Archetype card.} Each fingerprint is summarised in a one-page radar chart showing its normalised values across the eight most discriminative features (pass accuracy, long-ball ratio, cross ratio, smart-pass ratio, network density, centralisation, attacking-third pass proportion, counter-attack rate), together with its win rate, points per match, and goal difference. The card is designed to be printed and shared in a pre-match briefing without requiring any statistical knowledge from the coaching staff.
+    \item \textbf{Archetype card.} Each fingerprint is summarised in a one-page radar chart (Fig.~\ref{fig:radar}) showing its normalised values across the eight most discriminative features, together with win rate, points per match, and goal difference. The card is printed and shared at a pre-match briefing without requiring any statistical knowledge from the coaching staff.
 
-    \item \textbf{Team lookup.} Any team in the dataset is assigned its fingerprint label and ranked within that fingerprint on each feature. A club's analyst can query ``where does Opponent X sit within FP2, and which of their features are most extreme?'' in a single table view, enabling fast opponent scouting preparation.
+    \item \textbf{Team lookup.} Any team in the dataset is assigned its fingerprint label and ranked within that fingerprint on each feature. An analyst can query ``where does Opponent X sit within FP3, and which of their features are most extreme?'' in a single table view.
 
-    \item \textbf{Gap analysis for recruitment.} A club wishing to shift from FP3 (Defensive Direct) toward FP4 (Structured Attack) can generate a gap table showing the mean feature difference between the two fingerprints on each of the 30 dimensions. Recruitment candidates are then filtered by those gap features --- prioritising pass accuracy, network density, and attacking-third passing --- rather than by traditional metrics alone. This transforms the fingerprint taxonomy from a descriptive tool into a practical recruitment filter.
+    \item \textbf{Gap analysis for squad development.} Table~\ref{tab:gap} quantifies the mean feature gap from FP3 (Defensive Direct) to FP4 (Structured Attack) on the five most diagnostically important dimensions. A club currently in FP3 can use these deltas as recruitment filters: prioritise passers with $>$85\% completion, short-passing connectors who increase network density, and technically confident players who reduce centralisation and long-ball dependency.
+
+\begin{table}[h]
+\caption{FP3 $\to$ FP4 Gap Table. Gap = FP4 mean $-$ FP3 mean; positive = increase needed, negative = decrease needed.}\label{tab:gap}
+\centering
+\small
+\begin{tabular}{|l|c|c|c|l|}
+\hline
+\textbf{Feature} & \textbf{FP3 mean} & \textbf{FP4 mean} & \textbf{Gap} & \textbf{Recruitment implication} \\
+\hline
+Pass accuracy      & 0.788 & 0.854 & $+0.066$ & Target passers with $>$85\% completion \\
+Network density    & 0.596 & 0.655 & $+0.059$ & Add short-passing connectors \\
+Long-ball ratio    & 0.043 & 0.020 & $-0.023$ & Reduce aerial/direct play \\
+Centralisation     & 0.529 & 0.507 & $-0.022$ & Distribute build-up across players \\
+Clustering coef.   & 0.829 & 0.857 & $+0.028$ & Develop triangular passing patterns \\
+\hline
+\end{tabular}
+\end{table}
+
+    \item \textbf{Opponent scouting brief.} For any upcoming opponent, the framework produces a one-page brief showing their fingerprint, their position within that cluster on each feature, and recommended defensive adjustments. As a worked example: Burnley (2017/18 Premier League, classified FP3) exhibits a long-ball ratio of 0.066 --- 54\% above the FP3 cluster mean of 0.043 --- paired with below-average pass accuracy (0.772 vs.\ FP3 mean 0.788) and below-average centralisation (0.484 vs.\ FP3 mean 0.529). The tactical implication is a compact mid-block rather than a high press (to contest the second ball from long balls), but without the need to specifically neutralise a single distribution hub, since the low centralisation score indicates their direct play is distributed rather than routed through one target player.
 \end{enumerate}
+
 \section{Discussion}
 
 \subsection{Limitations}
@@ -194,7 +234,7 @@ Third, the framework enables opponent scouting: knowing that an upcoming opponen
 
 \section{Conclusion}
 
-We have presented a principled, reproducible pipeline for discovering Tactical Fingerprints from event data and passing networks. Applied to the Wyscout corpus, the pipeline identifies five statistically validated playing-style archetypes that differ substantially in pass accuracy, network topology, zone preferences, and match outcomes. Elite Possession teams win at nearly twice the rate of Direct Long Ball teams, and the goal difference gap between the top and bottom archetypes exceeds one goal per match. The joint feature space — combining 21 event features with 9 graph-theoretic network metrics — proves more discriminative than either family alone. Future extensions could incorporate tracking data, add pressure metrics, and study style evolution longitudinally.
+We have presented a principled, reproducible pipeline for discovering Tactical Fingerprints from event data and passing networks. Applied to the Wyscout corpus, the pipeline identifies five statistically validated playing-style archetypes that differ substantially in pass accuracy, network topology, zone preferences, and match outcomes. Elite Possession teams win at nearly twice the rate of Direct Long Ball teams, and the goal difference gap between the top and bottom archetypes exceeds one goal per match. The joint feature space --- combining 21 event features with 10 graph-theoretic network metrics --- proves more discriminative than either family alone. Future extensions could incorporate tracking data, add pressure metrics, and study style evolution longitudinally.
 
 %
 % ---- Bibliography ----
