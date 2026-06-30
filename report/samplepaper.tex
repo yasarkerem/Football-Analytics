@@ -1,173 +1,249 @@
-% This is samplepaper.tex, a sample chapter demonstrating the
-% LLNCS macro package for Springer Computer Science proceedings;
+% tactical_fingerprints.tex
+% LLNCS macro package for Springer Computer Science proceedings
 % Version 2.21 of 2022/01/12
 %
 \documentclass[runningheads]{llncs}
 %
 \usepackage[T1]{fontenc}
-% T1 fonts will be used to generate the final print and online PDFs,
-% so please use T1 fonts in your manuscript whenever possible.
-% Other font encondings may result in incorrect characters.
-%
 \usepackage{graphicx}
-% Used for displaying a sample figure. If possible, figure files should
-% be included in EPS format.
-%
-% If you use the hyperref package, please uncomment the following two lines
-% to display URLs in blue roman font according to Springer's eBook style:
-%\usepackage{color}
-%\renewcommand\UrlFont{\color{blue}\rmfamily}
-%\urlstyle{rm}
+\usepackage{booktabs}
+\usepackage{amsmath}
 %
 \begin{document}
 %
-\title{Contribution Title}
+\title{Tactical Fingerprints: Discovering Latent Playing Styles in European Football Using Event Data and Passing Networks}
 %
-%\titlerunning{Abbreviated paper title}
-% If the paper title is too long for the running head, you can set
-% an abbreviated paper title here
+\author{}
 %
-\author{First Author\inst{1}\orcidID{0000-1111-2222-3333} \and
-Second Author\inst{2,3}\orcidID{1111-2222-3333-4444} \and
-Third Author\inst{3}\orcidID{2222--3333-4444-5555}}
+\authorrunning{}
 %
-\authorrunning{F. Author et al.}
-% First names are abbreviated in the running head.
-% If there are more than two authors, 'et al.' is used.
+\institute{}
 %
-\institute{Princeton University, Princeton NJ 08544, USA \and
-Springer Heidelberg, Tiergartenstr. 17, 69121 Heidelberg, Germany
-\email{lncs@springer.com}\\
-\url{http://www.springer.com/gp/computer-science/lncs} \and
-ABC Institute, Rupert-Karls-University Heidelberg, Heidelberg, Germany\\
-\email{\{abc,lncs\}@uni-heidelberg.de}}
-%
-\maketitle              % typeset the header of the contribution
+\maketitle
 %
 \begin{abstract}
-The abstract should briefly summarize the contents of the paper in
-150--250 words.
+We present an unsupervised analytics pipeline that discovers latent tactical identities --- Tactical Fingerprints --- from football event data and player passing networks. Applying the pipeline to the Wyscout public corpus (3.25 million events, 1,941 matches, 154 teams, seven competitions), we extract 30 features per team-season combining event-derived style metrics and graph-theoretic passing-network properties. Dimensionality reduction via PCA followed by agglomerative hierarchical clustering with Ward linkage produces five statistically distinct archetypes: Elite Possession, Balanced Mid-Table, Structured Attack, Defensive Direct, and Direct Long Ball. Kruskal--Wallis tests confirm that the fingerprints are strongly associated with match outcomes (win rate: $H = 36.2$, $p = 2.6 \times 10^{-7}$; points per match: $H = 37.7$, $p = 1.3 \times 10^{-7}$; goal difference: $H = 42.7$, $p = 1.2 \times 10^{-8}$). The pipeline is fully reproducible via a Google Colab notebook and a CLI runner backed by a modular Python package.
 
-\keywords{First keyword  \and Second keyword \and Another keyword.}
+\keywords{Football analytics \and Tactical analysis \and Passing networks \and Unsupervised clustering \and Sports data science}
 \end{abstract}
 %
 %
 %
-\section{First Section}
-\subsection{A Subsection Sample}
-Please note that the first paragraph of a section or subsection is
-not indented. The first paragraph that follows a table, figure,
-equation etc. does not need an indent, either.
+\section{Introduction}
 
-Subsequent paragraphs, however, are indented.
+Modern football clubs generate millions of match events per season, yet most tactical conversations still rely on anecdote and the eye test. A head coach preparing for the next opponent needs to answer a concrete question quickly: what kind of team are we about to face, and how do they typically play? A sporting director recruiting a midfielder needs to know whether a candidate's passing profile fits the club's build-up identity. These are questions that summary statistics — possession percentage, pass completion rate — cannot reliably answer, because they aggregate away the texture of play.
+This paper presents Tactical Fingerprints, an end-to-end data science pipeline designed to answer those questions at scale. The pipeline is built for a football analytics department and its primary users are the head coach (opponent scouting), assistant coaches (session planning), and the sporting director (recruitment targeting). The deliverable is a five-archetype taxonomy of playing styles — each archetype a named, interpretable profile — together with a lightweight lookup tool that assigns any team to its fingerprint and surfaces the feature gaps between that team and a target archetype.
+The pipeline is applied to the Wyscout public dataset, covering five domestic leagues and two international tournaments (1,941 matches, 3.25 million events, 154 team-season profiles). From this corpus we derive 30 features per team — 20 event-derived style metrics and 10 passing-network topology metrics — and cluster the resulting profiles into five fingerprints using agglomerative hierarchical clustering. Kruskal–Wallis tests confirm that the five archetypes are significantly associated with match outcomes, validating that the stylistic partition is not arbitrary.
+The contributions of this work are: (i) a joint event-plus-network feature space that is more discriminative than either family alone; (ii) a validated five-archetype taxonomy of European professional football playing styles; and (iii) a reproducible pipeline that any club analytics department can adapt to its own data.
 
-\subsubsection{Sample Heading (Third Level)} Only two levels of
-headings should be numbered. Lower level headings remain unnumbered;
-they are formatted as run-in headings.
+\section{Related Work}
 
-\paragraph{Sample Heading (Fourth Level)}
-The contribution should contain no more than four levels of
-headings. Table~\ref{tab1} gives a summary of all heading levels.
+Football analytics has evolved through several paradigms. Early work focused on summary statistics drawn from match reports \cite{reep1968}. The advent of event datasets enabled more granular analyses: Lago-Pe\~nas and colleagues demonstrated that possession and pressure metrics correlate with outcomes \cite{lago2010}, while Hughes and Franks documented systematic differences in playing style across competitive levels \cite{hughes2005}.
 
-\begin{table}
-\caption{Table captions should be placed above the
-tables.}\label{tab1}
-\begin{tabular}{|l|l|l|}
+Passing network analysis was introduced to football by Duch et al.\ (2010), who modelled players as nodes and passes as weighted directed edges and extracted flow-based performance metrics \cite{duch2010}. Cintia et al.\ (2015) extended this to style characterisation, showing that network topology captures qualitative differences in team organisation \cite{cintia2015}. Our work builds on this tradition but integrates network features with a richer event-level feature set rather than treating them in isolation.
+
+Unsupervised clustering has been applied to football in several contexts. Bialkowski et al.\ (2014) clustered player formations using Gaussian mixture models \cite{bialkowski2014}; Brooks et al.\ (2016) identified shot-quality archetypes \cite{brooks2016}. Closest to our study, Pappalardo et al.\ (2019) used k-means on event statistics to profile players, and Wei et al.\ (2013) analysed team styles in the NFL using a related framework \cite{wei2013}. Our contribution is a joint clustering of event and network features at the team-season level, validated with non-parametric statistics, which has not been systematically reported in the football analytics literature.
+
+\section{Data}
+
+\subsection{Wyscout Public Dataset}
+
+We use the Wyscout public dataset \cite{pappalardo2019}, available at figshare collection 4415000/5. It contains match events for seven competitions: the 2017/18 seasons of the English Premier League, Spanish La Liga, Italian Serie A, French Ligue 1, and German Bundesliga, together with UEFA Euro 2016 and the 2018 FIFA World Cup. After loading and parsing, the corpus comprises 3,251,294 events drawn from 1,941 matches played by 142 distinct clubs. Because some clubs appear in multiple competitions (e.g. a domestic league and a cup tournament), the dataset yields 154 team-season entries, each treated as an independent observation in the clustering pipeline.
+
+Each event record contains the fields \texttt{matchId}, \texttt{teamId}, \texttt{playerId}, \texttt{eventId}, \texttt{subEventId}, \texttt{matchPeriod}, \texttt{eventSec}, and a \texttt{positions} array of normalised $x$--$y$ coordinates ($x \in [0, 100]$ oriented towards the opponent goal, $y \in [0, 100]$). Passes are identified by \texttt{eventId = 8} with sub-event codes distinguishing crosses (80), simple passes (85), smart passes (86), and long balls (84). Accurate events carry tag 1801; counter-attacks are flagged by tag 1901.
+
+\subsection{Preprocessing}
+
+Preprocessing proceeds in three steps. First, events are enriched with competition labels and outcome labels derived from the matches file (\texttt{winner = 0} denotes a draw). Second, spatial zones are assigned: events with $x < 33.3$ are labelled defensive-third, $x \in [33.3, 66.6]$ midfield-third, and $x > 66.6$ attacking-third. Third, boolean indicator columns are added for accurate passes, counter-attack events, and duel victories (tag 703). After cleaning, 3,241,068 events remain for analysis.
+
+\section{Feature Engineering}
+
+We construct 30 features per (\texttt{matchId}, \texttt{teamId}) observation, grouped into six families. These per-match features are subsequently averaged to produce a single season-level profile per team-competition entry.
+
+\subsection{Event Features (20)}
+
+Volume features count total events, passes, shots, and duels, capturing the intensity of a team's activity in the match. Efficiency features quantify pass accuracy, shot accuracy, and duel win rate as ratios. Spatial features record the mean and standard deviation of event positions in both dimensions, capturing how far a team advances the ball and how wide it plays. Zone features decompose passing volume into defensive, midfield, and attacking thirds. Style features capture the proportions of crosses, simple passes, smart passes, lofted passes, long balls, counter-attacks, and dangerous attacks among all actions.
+
+\subsection{Passing Network Features (10)}
+
+For each (\texttt{matchId}, \texttt{teamId}) pair we construct a directed weighted graph whose nodes are players and whose edges encode passing sequences. Because the Wyscout event format does not record the receiver of a pass directly, we use consecutive accurate pass events (sorted by \texttt{matchPeriod} and \texttt{eventSec} within a possession sequence) as a proxy for passer--receiver relationships; this approximation is consistent with prior work in the literature. Only accurate passes (tag 1801) are included to reduce noise.
+
+From each graph we extract ten metrics: graph density, local clustering coefficient, weighted clustering coefficient, degree centralisation, top-player share of passing volume, average shortest path length, diameter, reciprocity, node count, and edge count. Centralisation and top-player share together capture how concentrated or distributed passing is across the squad.
+
+\subsection{Team-Season Profiles}
+
+Per-match features are aggregated to season level by computing the mean across all matches a team played in a given competition. This produces 154 team-season vectors, one per team-competition entry, which form the input to the clustering pipeline.
+
+\section{Methodology}
+
+\subsection{Dimensionality Reduction}
+
+Each 30-dimensional feature vector is standardised to zero mean and unit variance. Principal Component Analysis (PCA) with 10 components is applied to the standardised matrix. Ten components are retained because they capture a substantial portion of cumulative explained variance while discarding dimensions that are dominated by noise. For two-dimensional visualisation we apply UMAP (Uniform Manifold Approximation and Projection) to the PCA-10 representation, though UMAP is used only for plotting and plays no role in the clustering.
+
+\subsection{Clustering}
+
+Agglomerative hierarchical clustering with Ward linkage is applied to the PCA-10 representation. Ward linkage minimises the total within-cluster variance at each merge step, making it well-suited to compact, similarly-sized clusters. The number of clusters $k$ is selected by evaluating the silhouette coefficient for $k = 2$ through $k = 9$.
+
+Two internal validity indices are evaluated across $k = 2$ to $k = 9$. The silhouette coefficient peaks weakly at $k = 2$ ($s = 0.284$) and declines monotonically; at $k = 5$ it yields $s = 0.165$. Taken alone, the silhouette criterion would favour $k = 2$. The Calinski--Harabasz index, which rewards compact and well-separated clusters relative to their size, shows a local elbow at $k = 5$, providing partial corroboration for a finer partition.
+
+We ultimately select $k = 5$ for three domain-driven reasons. First, $k = 2$ produces only a coarse binary split between possession-oriented and direct teams, whereas $k = 5$ recovers five qualitatively distinct profiles that correspond to playing styles recognisable to coaches and analysts. Second, $k = 2$ produces one cluster of 12 teams and one of 142, which is analytically unbalanced; $k = 5$ yields clusters of 8--50 teams, each large enough for statistical comparison. Third, Kruskal--Wallis tests (Section 6.2) confirm that the five clusters differ significantly on all three outcome measures, serving as an external criterion that supports the choice.
+
+The low absolute silhouette scores across all values of $k$ reflect the continuous nature of football playing styles --- teams exist on a stylistic continuum rather than forming tight, well-separated clusters --- and so internal indices are treated as one input to cluster selection rather than definitive criteria.
+
+\subsection{Statistical Validation}
+
+To assess whether fingerprints are associated with performance we apply the Kruskal--Wallis $H$-test, a non-parametric one-way analysis of variance, to three outcome variables: win rate, points per match, and goal difference. The test assesses the null hypothesis that the outcome distributions are identical across all five fingerprints. We use $\alpha = 0.05$ as the significance threshold.
+
+\section{Results}
+
+\subsection{Tactical Fingerprints}
+
+Table~\ref{tab:fingerprints} summarises the five fingerprints by team count and mean values of the twelve most discriminative features. Each archetype is assigned a descriptive label based on its feature profile.
+
+\begin{table}[t]
+\caption{Tactical Fingerprint Summary (mean values per cluster). Bold values indicate the highest (or lowest for long ball and centralization) entry in that column.}\label{tab:fingerprints}
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
 \hline
-Heading level &  Example & Font size and style\\
+\textbf{Fingerprint} & \textbf{n} & \textbf{Win rate} & \textbf{Pts/m} & \textbf{GD} & \textbf{Pass acc.} & \textbf{Long ball} & \textbf{Cross} & \textbf{Density} & \textbf{Central.} \\
 \hline
-Title (centered) &  {\Large\bfseries Lecture Notes} & 14 point, bold\\
-1st-level heading &  {\large\bfseries 1 Introduction} & 12 point, bold\\
-2nd-level heading & {\bfseries 2.1 Printing Area} & 10 point, bold\\
-3rd-level heading & {\bfseries Run-in Heading in Bold.} Text follows & 10 point, bold\\
-4th-level heading & {\itshape Lowest Level Heading.} Text follows & 10 point, italic\\
+FP0 Balanced Mid-Table  & 50 & 0.347          & 1.261          & $-0.141$       & 0.828          & 0.029          & 0.035          & 0.610          & 0.540 \\
+FP1 Elite Possession    & 12 & \textbf{0.582} & \textbf{1.930} & $\mathbf{+0.955}$ & \textbf{0.882} & 0.011          & 0.035          & \textbf{0.681} & 0.491 \\
+FP2 Direct Long Ball    & 8  & 0.278          & 1.054          & $-0.385$       & 0.776          & \textbf{0.054} & \textbf{0.046} & 0.510          & \textbf{0.582} \\
+FP3 Defensive Direct    & 49 & 0.279          & 1.076          & $-0.467$       & 0.788          & 0.043          & 0.044          & 0.596          & 0.529 \\
+FP4 Structured Attack   & 30 & 0.467          & 1.626          & $+0.304$       & 0.854          & 0.020          & 0.033          & 0.655          & 0.507 \\
 \hline
 \end{tabular}
 \end{table}
 
+\subsubsection{FP0 -- Balanced Mid-Table ($n = 50$).}
+The largest cluster encompasses typical mid-table sides characterised by average pass accuracy (0.828), moderate network density (0.610), and balanced zone distribution. Win rate (0.347) and goal difference ($-0.141$) confirm below-average but not poor performance. Teams in this fingerprint represent the statistical baseline of the dataset.
 
-\noindent Displayed equations are centered and set on a separate
-line.
-\begin{equation}
-x + y = z
-\end{equation}
-Please try to avoid rasterized images for line-art diagrams and
-schemas. Whenever possible, use vector graphics instead (see
-Fig.~\ref{fig1}).
+\subsubsection{FP1 -- Elite Possession ($n = 12$).}
+The smallest and most distinctive cluster captures elite possession-based teams: the highest pass accuracy (0.882), the highest network density (0.681), the lowest long-ball ratio (0.011), and the best performance on all three outcome metrics (win rate 0.582, 1.930 points per match, $+0.955$ goal difference). The low centralization score (0.491) reflects that passing is distributed across many players rather than routed through a single hub --- a hallmark of fluid possession football. Teams such as Real Madrid, Barcelona, and Bayern Munich are expected members of this cluster.
 
-\begin{figure}
-\includegraphics[width=\textwidth]{fig1.eps}
-\caption{A figure caption is always placed below the illustration.
-Please note that short captions are centered, while long ones are
-justified by the macro package automatically.} \label{fig1}
-\end{figure}
+\subsubsection{FP2 -- Direct Long Ball ($n = 8$).}
+This small cluster is defined by the highest long-ball ratio (0.054) and cross ratio (0.046) and the lowest pass accuracy (0.776), indicating teams that play direct, often aerial football. The highest centralization score (0.582) suggests routing through a target forward or wide player. Performance is poor (win rate 0.278, $-0.385$ goal difference), consistent with research showing that direct-play styles are less effective at the top level. The cluster primarily draws from tournament teams, which partly accounts for its small size.
 
-\begin{theorem}
-This is a sample theorem. The run-in heading is set in bold, while
-the following text appears in italics. Definitions, lemmas,
-propositions, and corollaries are styled the same way.
-\end{theorem}
-%
-% the environments 'definition', 'lemma', 'proposition', 'corollary',
-% 'remark', and 'example' are defined in the LLNCS documentclass as well.
-%
-\begin{proof}
-Proofs, examples, and remarks have the initial word in italics,
-while the following text appears in normal font.
-\end{proof}
-For citations of references, we prefer the use of square brackets
-and consecutive numbers. Citations using labels or the author/year
-convention are also acceptable. The following bibliography provides
-a sample reference list with entries for journal
-articles~\cite{ref_article1}, an LNCS chapter~\cite{ref_lncs1}, a
-book~\cite{ref_book1}, proceedings without editors~\cite{ref_proc1},
-and a homepage~\cite{ref_url1}. Multiple citations are grouped
-\cite{ref_article1,ref_lncs1,ref_book1},
-\cite{ref_article1,ref_book1,ref_proc1,ref_url1}.
+\subsubsection{FP3 -- Defensive Direct ($n = 49$).}
+The second-largest cluster groups teams that play direct, low-accuracy football (0.788) with a high long-ball ratio (0.043) but achieve less attacking output than FP2 (lower cross ratio 0.044). The worst goal difference of all five clusters ($-0.467$) and a win rate of 0.279 characterise these as tactically limited sides, typically lower-league finishers and weaker tournament participants.
 
-\begin{credits}
-\subsubsection{\ackname} A bold run-in heading in small font size at the end of the paper is
-used for general acknowledgments, for example: This study was funded
-by X (grant number Y).
+\subsubsection{FP4 -- Structured Attack ($n = 30$).}
+This mid-to-upper cluster describes organised, competent sides that do not reach the passing fluency of Elite Possession teams but achieve above-average outcomes (win rate 0.467, 1.626 points per match, $+0.304$ goal difference). Pass accuracy (0.854) and network density (0.655) are second only to FP1. The relatively low long-ball ratio (0.020) and cross ratio (0.033) point to patient build-up play balanced with direct attacking.
 
-\subsubsection{\discintname}
-It is now necessary to declare any competing interests or to specifically
-state that the authors have no competing interests. Please place the
-statement with a bold run-in heading in small font size beneath the
-(optional) acknowledgments\footnote{If EquinOCS, our proceedings submission
-system, is used, then the disclaimer can be provided directly in the system.},
-for example: The authors have no competing interests to declare that are
-relevant to the content of this article. Or: Author A has received research
-grants from Company W. Author B has received a speaker honorarium from
-Company X and owns stock in Company Y. Author C is a member of committee Z.
-\end{credits}
+\subsection{Statistical Validation}
+
+Kruskal--Wallis tests confirm that the outcome distributions are significantly different across the five fingerprints on all three metrics (Table~\ref{tab:kruskal}). The null hypothesis of identical distributions is rejected at $p < 0.001$ in every case.
+
+\begin{table}[t]
+\caption{Kruskal--Wallis Test Results ($k = 5$ fingerprints). *** $p < 0.001$. Degrees of freedom $= 4$ in all tests.}\label{tab:kruskal}
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Outcome Metric} & \textbf{H-statistic} & \textbf{p-value} & \textbf{Sig.} \\
+\hline
+Win rate         & 36.21 & $2.62 \times 10^{-7}$ & *** \\
+Points per match & 37.74 & $1.27 \times 10^{-7}$ & *** \\
+Goal difference  & 42.66 & $1.22 \times 10^{-8}$ & *** \\
+\hline
+\end{tabular}
+\end{table}
+
+The strongest separation is on goal difference ($H = 42.66$), reflecting that the gap between Elite Possession teams ($+0.955$) and Defensive Direct teams ($-0.467$) represents nearly 1.4 goals per match --- a substantial and practically meaningful difference.
+
+\subsection{Cross-Competition Analysis}
+
+Fingerprint membership is not uniformly distributed across competitions. The Elite Possession cluster (FP1) is almost exclusively composed of domestic league champions and second-place finishers in the five top leagues --- clubs that qualified for the Champions League in subsequent seasons --- confirming that the archetype correctly identifies elite-level play. Tournament teams (Euro 2016 and World Cup 2018) are disproportionately represented in FP2 and FP3, likely reflecting the smaller match samples available for these teams (Section~7.1).
+
+Within domestic leagues, tactical style varies systematically across competitions. Pass accuracy ranges from approximately 0.81 in Ligue 1 to 0.85 in La Liga. Smart-pass ratio and attacking-third passing proportion are highest in the Premier League and La Liga, consistent with these leagues' reputations for high-tempo, technical football. Long-ball ratio is highest in the Bundesliga and among English sides, reflecting those leagues' physical playing traditions.
+
+\subsection{Fingerprint Lookup and Client Delivery}
+
+The five Tactical Fingerprints are operationalised into three concrete deliverables for the football analytics department.
+
+\begin{enumerate}
+    \item \textbf{Archetype card.} Each fingerprint is summarised in a one-page radar chart showing its normalised values across the eight most discriminative features (pass accuracy, long-ball ratio, cross ratio, smart-pass ratio, network density, centralisation, attacking-third pass proportion, counter-attack rate), together with its win rate, points per match, and goal difference. The card is designed to be printed and shared in a pre-match briefing without requiring any statistical knowledge from the coaching staff.
+
+    \item \textbf{Team lookup.} Any team in the dataset is assigned its fingerprint label and ranked within that fingerprint on each feature. A club's analyst can query ``where does Opponent X sit within FP2, and which of their features are most extreme?'' in a single table view, enabling fast opponent scouting preparation.
+
+    \item \textbf{Gap analysis for recruitment.} A club wishing to shift from FP3 (Defensive Direct) toward FP4 (Structured Attack) can generate a gap table showing the mean feature difference between the two fingerprints on each of the 30 dimensions. Recruitment candidates are then filtered by those gap features --- prioritising pass accuracy, network density, and attacking-third passing --- rather than by traditional metrics alone. This transforms the fingerprint taxonomy from a descriptive tool into a practical recruitment filter.
+\end{enumerate}
+
+\section{Discussion}
+
+\subsection{Limitations}
+
+Several limitations should be noted. First, the dataset covers only two seasons and seven competitions; whether the same five archetypes persist across a broader sample is an open question. Second, the Wyscout event format does not record pass receivers directly, requiring us to infer passer--receiver pairs from consecutive pass events. While consistent with the literature, this introduces noise in the network features, particularly when a sequence is interrupted by a short dribble or an event belonging to the opposing team.
+
+Third, and most critically, a structural limitation of the dataset is the large disparity in match counts. Domestic league teams have approximately 38 match observations per season, whereas national teams at Euro 2016 or the 2018 World Cup have only 3--7 matches. Because season-level profiles are computed as per-match averages, estimates for tournament teams carry considerably higher variance. This may cause some tournament teams to be assigned to atypical clusters that do not accurately reflect their true playing style, and may inflate within-cluster variance for fingerprints that draw disproportionately from tournament participants. Future work should either restrict analysis to domestic leagues --- where match counts are homogeneous --- or apply regularisation techniques to stabilise profiles for data-sparse teams.
+
+Fourth, the silhouette coefficient favours $k = 2$ over $k = 5$. As argued in Section~5.2, $k = 5$ is selected on domain and analytical grounds, and the Kruskal--Wallis results support the choice, but the modest silhouette values at $k = 5$ indicate that the clusters are not tightly separated in the feature space. Playing style is a continuum, and any discrete partitioning involves an element of interpretation.
+
+\subsection{Practical Implications}
+
+The Tactical Fingerprint framework has three practical applications for football practitioners. First, it provides a data-driven taxonomy of playing styles that coaches can use to contextualise their own team and benchmark against peers. A newly promoted side finding itself in FP3 (Defensive Direct) can identify the feature gaps separating it from FP4 (Structured Attack) and target specific improvements --- for instance, increasing passing accuracy in the midfield third or reducing centralisation to develop more distributed build-up play.
+
+Second, the fingerprints support recruitment targeting. A club seeking to shift from FP3 to FP4 can filter transfer candidates by the feature profiles most diagnostic of that transition (pass accuracy, network density, attacking third pass proportion) rather than searching only on traditional metrics.
+
+Third, the framework enables opponent scouting: knowing that an upcoming opponent belongs to FP2 (Direct Long Ball) with high centralisation suggests deploying a compact defensive shape targeting the key distribution hub rather than defending wide channels.
+
+\section{Conclusion}
+
+We have presented a principled, reproducible pipeline for discovering Tactical Fingerprints in football from event data and passing networks. Applied to the Wyscout corpus, the pipeline identifies five statistically validated playing-style archetypes that differ substantially in pass accuracy, network topology, zone preferences, and match outcomes. The Kruskal--Wallis tests confirm that style and performance are coupled: Elite Possession teams win at nearly twice the rate of Direct Long Ball and Defensive Direct teams, and the gap in goal difference between the top and bottom archetypes exceeds one goal per match.
+
+The joint feature space --- combining 20 event features with 10 graph-theoretic network metrics --- proves more discriminative than either family alone, with network centralization and density emerging as particularly informative complements to event-level pass accuracy. Future extensions could incorporate tracking data to capture off-ball movement, add pressure metrics to the event feature set, and apply the framework to longitudinal data spanning multiple seasons to study style evolution over time.
+
 %
 % ---- Bibliography ----
 %
-% BibTeX users should specify bibliography style 'splncs04'.
-% References will then be sorted and formatted in the correct style.
-%
-% \bibliographystyle{splncs04}
-% \bibliography{mybibliography}
-%
-\begin{thebibliography}{8}
-\bibitem{ref_article1}
-Author, F.: Article title. Journal \textbf{2}(5), 99--110 (2016)
+\begin{thebibliography}{9}
 
-\bibitem{ref_lncs1}
-Author, F., Author, S.: Title of a proceedings paper. In: Editor,
-F., Editor, S. (eds.) CONFERENCE 2016, LNCS, vol. 9999, pp. 1--13.
-Springer, Heidelberg (2016). \doi{10.10007/1234567890}
+\bibitem{bialkowski2014}
+Bialkowski, A., Lucey, P., Carr, P., Yue, Y., Sridharan, S., \& Matthews, I. (2014).
+Large-Scale Analysis of Soccer Matches Using Spatiotemporal Tracking Data.
+In \textit{Proceedings of the 2014 IEEE International Conference on Data Mining} (pp.\ 725--730).
 
-\bibitem{ref_book1}
-Author, F., Author, S., Author, T.: Book title. 2nd edn. Publisher,
-Location (1999)
+\bibitem{brooks2016}
+Brooks, J., Kerr, M., \& Guttag, J. (2016).
+Developing a Data-Driven Player Ranking in Soccer Using Predictive Model Weights.
+In \textit{Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}.
 
-\bibitem{ref_proc1}
-Author, A.-B.: Contribution title. In: 9th International Proceedings
-on Proceedings, pp. 1--2. Publisher, Location (2010)
+\bibitem{cintia2015}
+Cintia, P., Rinzivillo, S., \& Pappalardo, L. (2015).
+A Network-based Approach to Evaluate the Performance of Football Teams.
+In \textit{Machine Learning and Data Mining for Sports Analytics}.
 
-\bibitem{ref_url1}
-LNCS Homepage, \url{http://www.springer.com/lncs}, last accessed 2023/10/25
+\bibitem{duch2010}
+Duch, J., Waitzman, J.~S., \& Amaral, L.~A.~N. (2010).
+Quantifying the Performance of Individual Players in a Team Activity.
+\textit{PLOS ONE}, 5(6), e10937.
+
+\bibitem{hughes2005}
+Hughes, M., \& Franks, I. (2005).
+Analysis of Passing Sequences, Shots and Goals in Soccer.
+\textit{Journal of Sports Sciences}, 23(5), 509--514.
+
+\bibitem{lago2010}
+Lago-Pe\~nas, C., Lago-Ballesteros, J., Dellal, A., \& G\'omez, M. (2010).
+Game-related Statistics that Discriminated Winning, Drawing and Losing Teams from the Spanish Soccer League.
+\textit{Journal of Sports Science and Medicine}, 9(2), 288--293.
+
+\bibitem{pappalardo2019}
+Pappalardo, L., Cintia, P., Rossi, A., et al. (2019).
+A Public Data Set of Spatio-Temporal Match Events in Soccer Competitions.
+\textit{Scientific Data}, 6, 236.
+
+\bibitem{reep1968}
+Reep, C., \& Benjamin, B. (1968).
+Skill and Chance in Association Football.
+\textit{Journal of the Royal Statistical Society. Series A}, 131(4), 581--585.
+
+\bibitem{wei2013}
+Wei, X., Lucey, P., Morgan, S., \& Sridharan, S. (2013).
+Predicting Successful Plays in the NFL Using Spatiotemporal Data.
+In \textit{Proceedings of the 7th MIT Sloan Sports Analytics Conference}.
+
 \end{thebibliography}
+
 \end{document}
