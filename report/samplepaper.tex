@@ -42,7 +42,7 @@ The contributions of this work are: (i) a joint event-plus-network feature space
 
 \section{Related Work}
 
-Early football analytics focused on summary statistics from match reports \cite{reep1968}. The event-data era enabled more granular analyses: Lago-Pe\~nas et al.\ showed possession metrics correlate with outcomes \cite{lago2010}, while passing network analysis introduced by Duch et al.\ modelled players as nodes and passes as weighted directed edges \cite{duch2010}. Cintia et al.\ extended this to style characterisation, showing network topology captures team organisation differences \cite{cintia2015}. Clustering has been applied to football formations \cite{bialkowski2014}, shot quality \cite{brooks2016}, and player profiles \cite{pappalardo2019}. Our contribution is a joint clustering of event and network features at the team-season level, validated with non-parametric statistics.
+Passing network analysis \cite{duch2010} models players as nodes and passes as weighted directed edges; Cintia et al.\ \cite{cintia2015} showed network topology captures team-organisation differences. Clustering has been applied to formations \cite{bialkowski2014} and player profiles \cite{pappalardo2019}. Our contribution is a joint clustering of event and network features at the team-season level, validated against match outcomes with non-parametric statistics.
 
 \section{Data}
 
@@ -80,7 +80,7 @@ Each 31-dimensional feature vector is standardised to zero mean and unit varianc
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.60\textwidth]{pca_variance.png}
+  \includegraphics[width=0.52\textwidth]{pca_variance.png}
   \caption{Cumulative explained variance for PCA components 1--10. Ten components retain approximately 85\% of total variance; the dashed line marks the 90\% threshold.}
   \label{fig:pca}
 \end{figure}
@@ -93,7 +93,7 @@ The silhouette coefficient peaks at $k = 2$ ($s = 0.284$) and declines monotonic
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.90\textwidth]{dendrogram.png}
+  \includegraphics[width=0.84\textwidth]{dendrogram.png}
   \caption{Ward-linkage dendrogram of 154 team-season vectors. The dashed red line marks the $k = 5$ cut at height $\approx 19.1$, yielding five sub-trees that map to the Tactical Fingerprint archetypes.}
   \label{fig:dendro}
 \end{figure}
@@ -148,11 +148,8 @@ The largest cluster captures typical mid-table sides with average pass accuracy 
 \subsubsection{FP1 -- Elite Possession ($n = 12$).}
 The smallest and most distinctive cluster captures elite possession-based teams: the highest pass accuracy (0.882), the highest network density (0.681), the lowest long-ball ratio (0.011), and the best performance on all three outcome metrics (win rate 0.582, 1.930 points per match, $+0.955$ goal difference). The low centralization score (0.491) reflects that passing is distributed across many players rather than routed through a single hub --- a hallmark of fluid possession football. Confirmed members include Real Madrid, Barcelona, Arsenal, Manchester City, Bayern M\"{u}nchen, Napoli, and PSG from the domestic leagues, together with the national squads of Spain (Euro 2016 and World Cup 2018), Germany (Euro 2016 and World Cup 2018), England (Euro 2016), Belgium (Euro 2016), and Brazil (World Cup 2018) --- all either league champions, Champions League qualifiers, or tournament contenders in 2017/18.
 
-\subsubsection{FP2 -- Direct Long Ball ($n = 8$).}
-This small cluster is defined by the highest long-ball ratio (0.054) and cross ratio (0.046) and the lowest pass accuracy (0.776), indicating teams that play direct, often aerial football. The highest centralization score (0.582) suggests routing through a target forward or wide player. Performance is poor (win rate 0.278, $-0.385$ goal difference), consistent with research showing that direct-play styles are less effective at the top level. The cluster primarily draws from tournament teams, which partly accounts for its small size.
-
-\subsubsection{FP3 -- Defensive Direct ($n = 49$).}
-The second-largest cluster groups teams that play direct, low-accuracy football (0.788) with a high long-ball ratio (0.043) but achieve less attacking output than FP2 (lower cross ratio 0.044). The worst goal difference of all five clusters ($-0.467$) and a win rate of 0.279 characterise these as tactically limited sides, typically lower-league finishers and weaker tournament participants.
+\subsubsection{FP2 -- Direct Long Ball ($n = 8$) and FP3 -- Defensive Direct ($n = 49$).}
+Both clusters share a direct playing style and poor outcomes but differ in intensity. FP2 records the highest long-ball ratio (0.054), highest cross ratio (0.046), lowest pass accuracy (0.776), and the highest centralisation (0.582), indicating aerial, hub-driven play; it draws predominantly from small-sample tournament teams. FP3 is the domestic-league counterpart --- still direct (long-ball ratio 0.043, pass accuracy 0.788) but with the worst goal difference overall ($-0.467$), characterising lower-table sides across all five leagues.
 
 
 \subsubsection{FP4 -- Structured Attack ($n = 30$).}
@@ -179,8 +176,6 @@ Goal difference  & 42.66 & $1.22 \times 10^{-8}$ & *** \\
 \subsection{Cross-Competition Analysis}
 
 Fingerprint membership is not uniformly distributed across competitions. The Elite Possession cluster (FP1) is almost exclusively composed of domestic league champions and second-place finishers in the five top leagues --- clubs that qualified for the Champions League in subsequent seasons --- confirming that the archetype correctly identifies elite-level play. Tournament teams (Euro 2016 and World Cup 2018) are disproportionately represented in FP2 and FP3, likely reflecting the smaller match samples available for these teams (Section~7.1).
-
-Within domestic leagues, tactical style varies systematically across competitions. Pass accuracy ranges from approximately 0.81 in Ligue 1 to 0.85 in La Liga. Smart-pass ratio and attacking-third passing proportion are highest in the Premier League and La Liga, consistent with these leagues' reputations for high-tempo, technical football. Long-ball ratio is highest in the Bundesliga and among English sides, reflecting those leagues' physical playing traditions.
 
 One notable anomaly merits discussion: France (World Cup 2018 winner) is classified as FP0 (Balanced Mid-Table) rather than FP1 (Elite Possession). This is consistent with the tournament record --- Didier Deschamps's side relied heavily on counter-attacking transitions and set-pieces rather than sustained positional possession, accumulating relatively modest pass-accuracy and network-density metrics across their seven matches. The result highlights a genuine limitation of the framework: a team can win a tournament through tactical pragmatism without exhibiting the stylistic signature of a possession-dominant archetype. It also illustrates that match-count imbalance (7 World Cup games vs.\ 38 domestic league games) amplifies variance for tournament teams and can cause their season-level profile to reflect a small, tactically specific sample rather than their true stylistic identity.
 
@@ -224,14 +219,6 @@ The dataset covers only two seasons; whether the five archetypes persist across 
 
 The silhouette coefficient favours $k = 2$ over $k = 5$. As argued in Section~5.2, $k = 5$ is selected on domain and analytical grounds, but the modest silhouette values confirm that playing style is a continuum and any discrete partitioning involves interpretation.
 
-\subsection{Practical Implications}
-
-The Tactical Fingerprint framework has three practical applications for football practitioners. First, it provides a data-driven taxonomy of playing styles that coaches can use to contextualise their own team and benchmark against peers. A newly promoted side finding itself in FP3 (Defensive Direct) can identify the feature gaps separating it from FP4 (Structured Attack) and target specific improvements --- for instance, increasing passing accuracy in the midfield third or reducing centralisation to develop more distributed build-up play.
-
-Second, the fingerprints support recruitment targeting. A club seeking to shift from FP3 to FP4 can filter transfer candidates by the feature profiles most diagnostic of that transition (pass accuracy, network density, attacking third pass proportion) rather than searching only on traditional metrics.
-
-Third, the framework enables opponent scouting: knowing that an upcoming opponent belongs to FP2 (Direct Long Ball) with high centralisation suggests deploying a compact defensive shape targeting the key distribution hub rather than defending wide channels.
-
 \section{Conclusion}
 
 We have presented a principled, reproducible pipeline for discovering Tactical Fingerprints from event data and passing networks. Applied to the Wyscout corpus, the pipeline identifies five statistically validated playing-style archetypes that differ substantially in pass accuracy, network topology, zone preferences, and match outcomes. Elite Possession teams win at nearly twice the rate of Direct Long Ball teams, and the goal difference gap between the top and bottom archetypes exceeds one goal per match. The joint feature space --- combining 21 event features with 10 graph-theoretic network metrics --- proves more discriminative than either family alone. Future extensions could incorporate tracking data, add pressure metrics, and study style evolution longitudinally.
@@ -246,11 +233,6 @@ Bialkowski, A., Lucey, P., Carr, P., Yue, Y., Sridharan, S., \& Matthews, I. (20
 Large-Scale Analysis of Soccer Matches Using Spatiotemporal Tracking Data.
 In \textit{Proc.\ IEEE ICDM} (pp.\ 725--730).
 
-\bibitem{brooks2016}
-Brooks, J., Kerr, M., \& Guttag, J. (2016).
-Developing a Data-Driven Player Ranking in Soccer Using Predictive Model Weights.
-In \textit{Proc.\ 22nd ACM SIGKDD}.
-
 \bibitem{cintia2015}
 Cintia, P., Rinzivillo, S., \& Pappalardo, L. (2015).
 A Network-based Approach to Evaluate the Performance of Football Teams.
@@ -261,30 +243,10 @@ Duch, J., Waitzman, J.~S., \& Amaral, L.~A.~N. (2010).
 Quantifying the Performance of Individual Players in a Team Activity.
 \textit{PLOS ONE}, 5(6), e10937.
 
-\bibitem{hughes2005}
-Hughes, M., \& Franks, I. (2005).
-Analysis of Passing Sequences, Shots and Goals in Soccer.
-\textit{Journal of Sports Sciences}, 23(5), 509--514.
-
-\bibitem{lago2010}
-Lago-Pe\~nas, C., Lago-Ballesteros, J., Dellal, A., \& G\'omez, M. (2010).
-Game-related Statistics that Discriminated Winning, Drawing and Losing Teams from the Spanish Soccer League.
-\textit{Journal of Sports Science and Medicine}, 9(2), 288--293.
-
 \bibitem{pappalardo2019}
 Pappalardo, L., Cintia, P., Rossi, A., et al. (2019).
 A Public Data Set of Spatio-Temporal Match Events in Soccer Competitions.
 \textit{Scientific Data}, 6, 236.
-
-\bibitem{reep1968}
-Reep, C., \& Benjamin, B. (1968).
-Skill and Chance in Association Football.
-\textit{Journal of the Royal Statistical Society. Series A}, 131(4), 581--585.
-
-\bibitem{wei2013}
-Wei, X., Lucey, P., Morgan, S., \& Sridharan, S. (2013).
-Predicting Successful Plays in the NFL Using Spatiotemporal Data.
-In \textit{Proc.\ 7th MIT Sloan Sports Analytics Conference}.
 
 \end{thebibliography}
 
